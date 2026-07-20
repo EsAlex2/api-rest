@@ -5,13 +5,14 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class Status extends Model
+class Supplier extends Model
 {
-    protected $table = 'statuses';
-
     protected $fillable = [
-        'name_status',
-        'description'
+        'name',
+        'contact_name',
+        'email',
+        'phone',
+        'address'
     ];
 
     public function products(): HasMany
