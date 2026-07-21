@@ -106,3 +106,33 @@ Puedes importar la colección preconfigurada para probar de inmediato todos los 
 - La colección incluye una variable global `{{base_url}}` (por defecto `http://localhost:8000`) para que puedas apuntar a tu entorno local al instante.
 
 *Para una descripción técnica detallada de cada ruta, parámetros y formatos JSON, consulta el archivo **`[endpoints.md](endpoints.md)`**.*
+
+---
+
+## 🐳 Despliegue con Docker (Recomendado)
+
+Si prefieres ejecutar el proyecto utilizando contenedores aislados de Docker y Docker Compose, sigue estos pasos:
+
+### 1. Requisitos
+* Tener instalado **Docker Desktop**.
+
+### 2. Construir y Levantar Contenedores
+Ejecuta el siguiente comando en la raíz del proyecto para construir la imagen del servidor web y levantar la base de datos PostgreSQL:
+```bash
+docker compose up --build -d
+```
+Esto levantará:
+* La API en el puerto `8090` (accesible en `http://localhost:8090`).
+* PostgreSQL en el puerto host `5433` (para evitar conflictos si ya tienes un PostgreSQL local en el puerto `5432`).
+
+### 3. Ejecutar Migraciones y Cargar Semillas
+Una vez que los contenedores estén activos, ejecuta las migraciones y seeders dentro del contenedor de la API:
+```bash
+docker compose exec api php artisan migrate:fresh --seed
+```
+
+### 4. Apagar los Contenedores
+Para detener y eliminar los contenedores del entorno:
+```bash
+docker compose down
+```

@@ -18,10 +18,22 @@ class InventoryMovementTest extends TestCase
     private $statusAvailable;
     private $statusOut;
     private $statusLow;
+    private $user;
 
     protected function setUp(): void
     {
         parent::setUp();
+
+        $this->user = \App\Models\User::create([
+            'first_name' => 'Test',
+            'last_name' => 'User',
+            'cedula' => '99999999',
+            'gender' => 'Otro',
+            'email' => 'test@test.com',
+            'username' => 'test.user',
+            'password' => 'password123',
+            'role' => 'user'
+        ]);
 
         // Crear datos base
         $this->category = Category::create([
@@ -64,7 +76,7 @@ class InventoryMovementTest extends TestCase
             'status_id' => $this->statusLow->id,
         ]);
 
-        $response = $this->postJson('/api/movements', [
+        $response = $this->actingAs($this->user, 'sanctum')->postJson('/api/movements', [
             'product_id' => $product->id,
             'type' => 'in',
             'quantity' => 10,
@@ -100,7 +112,7 @@ class InventoryMovementTest extends TestCase
             'status_id' => $this->statusAvailable->id,
         ]);
 
-        $response = $this->postJson('/api/movements', [
+        $response = $this->actingAs($this->user, 'sanctum')->postJson('/api/movements', [
             'product_id' => $product->id,
             'type' => 'out',
             'quantity' => 6,
@@ -129,7 +141,7 @@ class InventoryMovementTest extends TestCase
             'status_id' => $this->statusAvailable->id,
         ]);
 
-        $response = $this->postJson('/api/movements', [
+        $response = $this->actingAs($this->user, 'sanctum')->postJson('/api/movements', [
             'product_id' => $product->id,
             'type' => 'out',
             'quantity' => 6,
@@ -159,7 +171,7 @@ class InventoryMovementTest extends TestCase
             'status_id' => $this->statusAvailable->id,
         ]);
 
-        $response = $this->postJson('/api/movements', [
+        $response = $this->actingAs($this->user, 'sanctum')->postJson('/api/movements', [
             'product_id' => $product->id,
             'type' => 'adjustment',
             'quantity' => 0,

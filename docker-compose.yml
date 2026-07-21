@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  api:
+    build: .
+    container_name: inventory_api
+    ports:
+      - "8090:80"
+    volumes:
+      - .:/var/www/html
+      - /var/www/html/vendor
+    environment:
+      - APP_ENV=local
+      - APP_DEBUG=true
+      - APP_KEY=base64:nGAWahHBfUWDa8yUg2qy/Y81jOExPlVKE96B1TLKDes=
+      - DB_CONNECTION=pgsql
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_DATABASE=postgres
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=qwerty2801**
+    depends_on:
+      - db
+
+  db:
+    image: postgres:17
+    container_name: inventory_db
+    restart: always
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=qwerty2801**
+    ports:
+      - "5433:5432" # Expuesto al host en 5433 para evitar colisiones con tu base de datos local (5432)
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:

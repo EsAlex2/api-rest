@@ -1,6 +1,6 @@
 # Catálogo y Especificación de Endpoints - API REST
 
-Esta guía detalla el uso, parámetros y payloads para interactuar con todos los endpoints expuestos por la API de Gestión de Inventario.
+Esta guía detalla el uso, parámetros y payloads para interactuar con todos los endpoints expuestos por la API de Gestión de Inventario, incluyendo autenticación y control de usuarios.
 
 ---
 
@@ -13,71 +13,141 @@ Content-Type: application/json
 
 ---
 
-## 📦 1. Productos (`/api/products`)
+## 🔐 0. Autenticación (`/api/login`, `/api/logout`, `/api/me`)
+
+Todas las rutas protegidas requieren pasar un token Bearer en las cabeceras:
+```http
+Authorization: Bearer <tu_token_sanctum>
+```
+
+### Iniciar Sesión (Login)
+* **Método**: `POST`
+* **Ruta**: `/api/login` (Pública, no requiere token)
+* **Cuerpo de Petición (JSON)**:
+  ```json
+  {
+      "username": "admin",
+      "password": "admin123"
+  }
+  ```
+* **Respuesta exitosa (`200 OK`)**:
+  ```json
+  {
+      "message": "Inicio de sesión exitoso",
+      "access_token": "1|b78a9c8f0...",
+      "token_type": "Bearer",
+      "user": {
+          "id": 1,
+          "first_name": "Administrador",
+          "last_name": "Sistema",
+          "username": "admin",
+          "role": "admin",
+          "email": "admin@inventario.com"
+      }
+  }
+  ```
+
+### Obtener Perfil Actual (Me)
+* **Método**: `GET`
+* **Ruta**: `/api/me` (Protegida)
+* **Respuesta exitosa (`200 OK`)**: Devuelve el perfil completo del usuario autenticado.
+
+### Cerrar Sesión (Logout)
+* **Método**: `POST`
+* **Ruta**: `/api/logout` (Protegida)
+* **Respuesta exitosa (`200 OK`)**:
+  ```json
+  {
+      "message": "Sesión cerrada exitosamente y token revocado."
+  }
+  ```
+
+---
+
+## 👥 1. Administración de Usuarios (`/api/users`) - [Solo Administradores]
+
+### Registrar Nuevo Usuario
+* **Método**: `POST`
+* **Ruta**: `/api/users` (Protegida)
+* **Cuerpo de Petición (JSON)**:
+  ```json
+  {
+      "first_name": "Carlos Alberto",
+      "last_name": "Pérez Gómez",
+      "cedula": "22334455",
+      "gender": "M",
+      "mobile_phone": "04123334455",
+      "email": "carlos.perez@inventario.com",
+      "role": "user"
+  }
+  ```
+* **Lógica automática**:
+  * **Nombre de usuario**: Generado automáticamente como `nombre.apellido` (`carlos.perez`). Si ya existe, añade un correlativo (`carlos.perez1`).
+  * **Contraseña por defecto**: Se le asigna automáticamente el número de su `cedula` (`22334455`) cifrado mediante bcrypt.
+* **Respuesta exitosa (`210 Created` / `201 Created`)**:
+  ```json
+  {
+      "message": "Usuario registrado exitosamente",
+      "data": {
+          "id": 3,
+          "first_name": "Carlos Alberto",
+          "last_name": "Pérez Gómez",
+          "cedula": "22334455",
+          "gender": "M",
+          "email": "carlos.perez@inventario.com",
+          "username": "carlos.perez",
+          "role": "user"
+      },
+      "credenciales_generadas": {
+          "username": "carlos.perez",
+          "password_temporal": "22334455"
+      }
+  }
+  ```
+
+### Listar Usuarios
+* **Método**: `GET`
+* **Ruta**: `/api/users` (Protegida)
+* **Respuesta exitosa (`200 OK`)**: Devuelve un listado completo con todos los usuarios registrados.
+
+### Ver Detalle de Usuario
+* **Método**: `GET`
+* **Ruta**: `/api/users/{id}` (Protegida)
+* **Respuesta exitosa (`200 OK`)**: Devuelve la información del usuario consultado.
+
+### Eliminar Usuario
+* **Método**: `DELETE`
+* **Ruta**: `/api/users/{id}` (Protegida)
+* **Respuesta exitosa (`200 OK`)**:
+  ```json
+  {
+      "message": "Usuario eliminado exitosamente."
+  }
+  ```
+  *(Nota: Un usuario administrador no puede eliminarse a sí mismo para evitar el bloqueo del sistema).*
+
+---
+
+## 📦 2. Productos (`/api/products`) - [Protegido]
 
 ### Listar Productos
 * **Método**: `GET`
-* **Ruta**: `/api/products`
+* **Ruta**: `/api/products` (Protegida)
 * **Parámetros de consulta (Query params - Opcionales)**:
-  * `category_id`: Filtrar por ID de categoría (ej: `?category_id=1`).
-  * `supplier_id`: Filtrar por ID de proveedor (ej: `?supplier_id=2`).
-  * `status_id`: Filtrar por ID de estado (ej: `?status_id=3`).
-  * `search`: Filtrar por nombre o SKU (ej: `?search=Laptop` o `?search=LPT-HP-001`).
+  * `category_id`: Filtrar por categoría (ej: `?category_id=1`).
+  * `supplier_id`: Filtrar por proveedor (ej: `?supplier_id=2`).
+  * `status_id`: Filtrar por estado (ej: `?status_id=3`).
+  * `search`: Filtrar por nombre o SKU (ej: `?search=Laptop`).
   * `low_stock`: Si se envía `true` o `1`, sólo devuelve productos con bajo stock.
-  * `per_page`: Número de productos por página (por defecto `15`).
-* **Respuesta exitosa (`200 OK`)**:
-  ```json
-  {
-      "current_page": 1,
-      "data": [
-          {
-              "id": 1,
-              "name": "Laptop HP Pavillion",
-              "description": "Ryzen 5, 16GB RAM, 512GB SSD.",
-              "sku": "LPT-HP-001",
-              "price": "650.00",
-              "stock": 15,
-              "min_stock": 5,
-              "category_id": 1,
-              "supplier_id": 1,
-              "status_id": 1,
-              "created_at": "2026-07-20T20:23:55.000000Z",
-              "updated_at": "2026-07-20T20:23:55.000000Z",
-              "category": { "id": 1, "name": "Electrónica" },
-              "supplier": { "id": 1, "name": "TechDistribuidora" },
-              "status": { "id": 1, "name_status": "Disponible" }
-          }
-      ],
-      "total": 1
-  }
-  ```
+  * `per_page`: Paginación (por defecto `15`).
 
 ### Listar Productos con Stock Bajo
 * **Método**: `GET`
-* **Ruta**: `/api/products/low-stock`
-* **Respuesta exitosa (`200 OK`)**:
-  ```json
-  {
-      "total_low_stock": 1,
-      "data": [
-          {
-              "id": 2,
-              "name": "Teléfono Samsung Galaxy A35",
-              "sku": "CEL-SAM-002",
-              "price": "280.00",
-              "stock": 4,
-              "min_stock": 8,
-              "category_id": 1,
-              "status_id": 3,
-              "status": { "id": 3, "name_status": "Stock Bajo" }
-          }
-      ]
-  }
-  ```
+* **Ruta**: `/api/products/low-stock` (Protegida)
 
 ### Crear Producto
 * **Método**: `POST`
-* **Ruta**: `/api/products`
+* **Ruta**: `/api/products` (Protegida)
 * **Cuerpo de Petición (JSON)**:
   ```json
   {
@@ -91,175 +161,40 @@ Content-Type: application/json
       "supplier_id": 1
   }
   ```
-  *(Nota: Al crear el producto, se le asigna el estado correspondiente basado en su `stock` inicial de forma automática).*
-* **Respuesta exitosa (`201 Created`)**:
-  ```json
-  {
-      "message": "Producto creado exitosamente",
-      "data": {
-          "id": 7,
-          "name": "Audífonos Inalámbricos Sony",
-          "sku": "AUD-SONY-007",
-          "price": "350.00",
-          "stock": 10,
-          "min_stock": 3,
-          "category_id": 1,
-          "supplier_id": 1,
-          "status_id": 1,
-          "status": { "id": 1, "name_status": "Disponible" }
-      }
-  }
-  ```
-
-### Ver Detalle de un Producto
-* **Método**: `GET`
-* **Ruta**: `/api/products/{id}`
-* **Respuesta exitosa (`200 OK`)**:
-  Devuelve la información del producto, incluyendo sus relaciones cargadas y todo su historial de movimientos ordenados cronológicamente:
-  ```json
-  {
-      "id": 1,
-      "name": "Laptop HP Pavillion",
-      "stock": 15,
-      "category": { "name": "Electrónica" },
-      "movements": [
-          { "id": 2, "type": "out", "quantity": 5, "reason": "Venta" },
-          { "id": 1, "type": "in", "quantity": 20, "reason": "Compra inicial" }
-      ]
-  }
-  ```
-
-### Actualizar Producto
-* **Método**: `PUT` / `PATCH`
-* **Ruta**: `/api/products/{id}`
-* **Cuerpo de Petición (JSON - Envía sólo lo que desees actualizar)**:
-  ```json
-  {
-      "name": "Audífonos Sony WH-1000XM5",
-      "price": 370.00,
-      "min_stock": 5
-  }
-  ```
-* **Respuesta exitosa (`200 OK`)**: Devuelve el producto actualizado y con el estado recalculado si cambiaron el stock o stock mínimo.
-
-### Eliminar Producto
-* **Método**: `DELETE`
-* **Ruta**: `/api/products/{id}`
-* **Respuesta exitosa (`200 OK`)**:
-  ```json
-  {
-      "message": "Producto y sus movimientos de inventario asociados eliminados exitosamente"
-  }
-  ```
 
 ---
 
-## 🔄 2. Movimientos de Inventario (`/api/movements`)
+## 🔄 3. Movimientos de Inventario (`/api/movements`) - [Protegido]
 
 ### Listar Historial de Movimientos
 * **Método**: `GET`
-* **Ruta**: `/api/movements`
-* **Parámetros de consulta (Query params - Opcionales)**:
-  * `product_id`: Filtrar por producto.
-  * `type`: Filtrar por tipo de movimiento (`in`, `out`, `adjustment`).
-* **Respuesta exitosa (`200 OK`)**: Lista paginada del historial de movimientos.
+* **Ruta**: `/api/movements` (Protegida)
 
 ### Registrar Movimiento (Lógica Automatizada de Stock)
 * **Método**: `POST`
-* **Ruta**: `/api/movements`
+* **Ruta**: `/api/movements` (Protegida)
 * **Cuerpo de Petición (JSON)**:
-  * **Registrar Entrada (`in`)**:
-    ```json
-    {
-        "product_id": 1,
-        "type": "in",
-        "quantity": 10,
-        "reason": "Compra de lote nuevo"
-    }
-    ```
-  * **Registrar Salida (`out`)**:
-    ```json
-    {
-        "product_id": 1,
-        "type": "out",
-        "quantity": 5,
-        "reason": "Venta al cliente"
-    }
-    ```
-  * **Ajuste Directo (`adjustment`)**:
-    ```json
-    {
-        "product_id": 1,
-        "type": "adjustment",
-        "quantity": 12,
-        "reason": "Ajuste físico por auditoría"
-    }
-    ```
-* **Respuesta exitosa (`201 Created`)**:
-  ```json
-  {
-      "message": "Movimiento de inventario registrado con éxito",
-      "data": {
-          "id": 5,
-          "product_id": 1,
-          "type": "in",
-          "quantity": 10,
-          "reason": "Compra de lote nuevo"
-      },
-      "product": {
-          "id": 1,
-          "name": "Laptop HP Pavillion",
-          "stock": 25,
-          "status_id": 1,
-          "status": { "id": 1, "name_status": "Disponible" }
-      }
-  }
-  ```
-* **Respuesta de Error - Stock Insuficiente (`422 Unprocessable Entity`)**:
-  Ocurre cuando intentas hacer una salida (`out`) mayor a la cantidad en almacén:
-  ```json
-  {
-      "message": "Stock insuficiente para realizar esta salida. Stock actual: 15, cantidad solicitada: 20."
-  }
-  ```
-
-### Ver Historial por Producto
-* **Método**: `GET`
-* **Ruta**: `/api/products/{id}/movements`
-* **Respuesta exitosa (`200 OK`)**: Devuelve un JSON detallando el producto y su historial exclusivo de movimientos.
+  * **Entrada (`in`)**: `{"product_id": 1, "type": "in", "quantity": 10, "reason": "Compra de lote"}`
+  * **Salida (`out`)**: `{"product_id": 1, "type": "out", "quantity": 5, "reason": "Ventas web"}`
+  * **Ajuste (`adjustment`)**: `{"product_id": 1, "type": "adjustment", "quantity": 12, "reason": "Auditoría de almacén"}`
 
 ---
 
-## 📂 3. Categorías (`/api/categories`)
-
-### Endpoints Básicos de Recurso
-* `GET /api/categories` - Obtiene todas las categorías con el conteo de sus productos en la clave `products_count`.
-* `POST /api/categories` - Crea una categoría. Body: `{"name": "Nombre", "description": "Opcional"}`.
-* `GET /api/categories/{id}` - Obtiene detalle.
-* `PUT /api/categories/{id}` - Actualiza datos de la categoría.
-* `DELETE /api/categories/{id}` - Elimina la categoría.
-  * **Restricción**: Si tiene productos asignados, devolverá error HTTP `400` para evitar dejar productos huérfanos.
+## 📂 4. Categorías (`/api/categories`) - [Protegido]
+* `GET /api/categories` - Obtener todas las categorías con cantidad de productos.
+* `POST /api/categories` - Crear categoría. `{"name": "Nombre", "description": "Opcional"}`.
+* `DELETE /api/categories/{id}` - Eliminar categoría (bloqueado si tiene productos asignados).
 
 ---
 
-## 🤝 4. Proveedores (`/api/suppliers`)
-
-### Endpoints Básicos de Recurso
-* `GET /api/suppliers` - Lista los proveedores registrados.
-* `POST /api/suppliers` - Registra un proveedor. Body: `{"name": "TechDist", "contact_name": "Luis", "email": "luis@mail.com", "phone": "0412...", "address": "Dirección"}`.
-* `GET /api/suppliers/{id}` - Obtiene detalle.
-* `PUT /api/suppliers/{id}` - Modifica datos del proveedor.
-* `DELETE /api/suppliers/{id}` - Elimina el proveedor.
-  * **Nota**: Configurado con `nullOnDelete()`, los productos asociados a este proveedor no se eliminarán, sino que su valor `supplier_id` pasará a ser `null` automáticamente.
+## 🤝 5. Proveedores (`/api/suppliers`) - [Protegido]
+* `GET /api/suppliers` - Lista proveedores.
+* `POST /api/suppliers` - Crear proveedor.
+* `DELETE /api/suppliers/{id}` - Eliminar proveedor (desvincula productos asociados).
 
 ---
 
-## 🚥 5. Estados (`/api/statuses`)
-
-### Endpoints Básicos de Recurso
-* `GET /api/statuses` - Lista los estados.
-* `POST /api/statuses` - Registra un nuevo estado. Body: `{"name_status": "Dañado", "description": "Defectuoso"}`.
-* `GET /api/statuses/{id}` - Detalle del estado.
-* `PUT /api/statuses/{id}` - Actualiza el estado.
-* `DELETE /api/statuses/{id}` - Elimina el estado.
-  * **Restricción**: Retornará un error HTTP `400` si hay productos que dependen de él.
+## 🚥 6. Estados (`/api/statuses`) - [Protegido]
+* `GET /api/statuses` - Lista estados (e.g. Disponible, Stock Bajo, Agotado).
+* `POST /api/statuses` - Crear estado.
+* `DELETE /api/statuses/{id}` - Eliminar estado (bloqueado si tiene productos asignados).
