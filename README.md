@@ -1,58 +1,108 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Sistema de Gestión de Inventario - API REST
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Esta es una API RESTful desarrollada con **Laravel 13** diseñada para gestionar el inventario de un almacén o negocio. Permite controlar productos, categorías, proveedores y el historial de movimientos de inventario (entradas, salidas y ajustes de stock) de forma totalmente automatizada y transaccional.
 
-## About Laravel
+---
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## 🛠️ Tecnologías y Requerimientos
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+- **PHP**: `^8.3`
+- **Laravel Framework**: `^13.20`
+- **Base de Datos**: PostgreSQL (o cualquier motor compatible con Laravel)
+- **Gestión de Dependencias**: Composer
+- **Pruebas**: PHPUnit
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+---
 
-## Learning Laravel
+## 🚀 Instalación y Configuración Local
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+Sigue estos pasos para levantar la API en tu máquina de desarrollo:
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
-
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
-
-## Agentic Development
-
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
-
+### 1. Clonar el repositorio y acceder a la carpeta
 ```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+git clone <url-del-repositorio>
+cd api-rest
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+### 2. Instalar las dependencias de PHP
+```bash
+composer install
+```
 
-## Contributing
+### 3. Configurar las variables de entorno
+Crea una copia del archivo `.env.example` y nómbralo `.env`:
+```bash
+cp .env.example .env
+```
+Abre el archivo `.env` y configura los datos de acceso a tu base de datos PostgreSQL:
+```env
+DB_CONNECTION=pgsql
+DB_HOST=127.0.0.1
+DB_PORT=5432
+DB_DATABASE=postgres
+DB_USERNAME=postgres
+DB_PASSWORD=tu_contraseña
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### 4. Generar la clave de la aplicación
+```bash
+php artisan key:generate
+```
 
-## Code of Conduct
+### 5. Ejecutar migraciones y sembrar datos de prueba (Seeders)
+Este comando creará la estructura de tablas y cargará datos listos para probar (categorías, proveedores, estados iniciales, productos y su historial de movimientos):
+```bash
+php artisan migrate:fresh --seed
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+### 6. Levantar el servidor de desarrollo
+```bash
+php artisan serve
+```
+La aplicación estará disponible por defecto en: `http://localhost:8000` (o el puerto especificado en consola).
 
-## Security Vulnerabilities
+---
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+## 📂 Estructura Principal del Proyecto
 
-## License
+- **Modelos (`app/Models`)**:
+  - `Status`: Representa el estado del producto (Disponible, Stock Bajo, Agotado, Dañado).
+  - `Category`: Categorías de clasificación de los productos.
+  - `Supplier`: Datos de contacto de los proveedores.
+  - `Product`: Datos del producto (SKU, stock, stock mínimo, precio).
+  - `InventoryMovement`: Historial de entradas, salidas y ajustes de inventario.
+- **Controladores (`app/Http/Controllers`)**:
+  - Manejo de recursos REST para cada entidad con validaciones de datos y respuestas JSON estandarizadas.
+- **Pruebas (`tests/Feature`)**:
+  - `InventoryMovementTest`: Contiene las pruebas que aseguran el correcto funcionamiento de las transacciones de inventario y el ajuste automático de stock.
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+---
+
+## 📊 Reglas de Negocio Automatizadas
+
+- **Entradas (`in`)**: Suma la cantidad directamente al stock del producto.
+- **Salidas (`out`)**: Valida si el stock es suficiente antes de realizar el despacho. Si no lo es, cancela la operación y devuelve un error de validación `422`.
+- **Ajustes (`adjustment`)**: Sobrescribe el stock actual con el nuevo valor (ideal para inventarios físicos anuales).
+- **Actualización de Estados Automática**: Después de cada movimiento, el estado de inventario del producto se recalcula automáticamente:
+  - Stock igual a `0` ➔ Estado cambia a **`Agotado`**
+  - Stock menor o igual a `min_stock` (pero mayor a 0) ➔ Estado cambia a **`Stock Bajo`**
+  - Stock mayor que `min_stock` ➔ Estado cambia a **`Disponible`**
+
+---
+
+## 🧪 Pruebas Unitarias y de Integración
+
+Para ejecutar la suite de pruebas automatizadas y validar el sistema:
+```bash
+php artisan test
+```
+
+---
+
+## 📋 Pruebas en Insomnia o Postman
+
+Puedes importar la colección preconfigurada para probar de inmediato todos los endpoints de la API:
+- Ubicación del archivo de importación: **`[inventory_api_collection.json](inventory_api_collection.json)`** en la raíz del proyecto.
+- La colección incluye una variable global `{{base_url}}` (por defecto `http://localhost:8000`) para que puedas apuntar a tu entorno local al instante.
+
+*Para una descripción técnica detallada de cada ruta, parámetros y formatos JSON, consulta el archivo **`[endpoints.md](endpoints.md)`**.*
