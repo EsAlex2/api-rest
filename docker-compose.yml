@@ -31,7 +31,7 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=qwerty2801**
     ports:
-      - "5432:5432" # Expuesto al host en 5433 para evitar colisiones con tu base de datos local (5432)
+      - "5433:5432" # Expuesto al host en 5433 para evitar colisiones con tu base de datos local (5432)
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
