@@ -128,6 +128,79 @@ Authorization: Bearer <tu_token_sanctum>
 
 ---
 
+## 🔑 1.1. Roles y Permisos (`/api/roles`, `/api/permissions`) - [Solo Administradores / users.manage]
+
+### Listar Roles
+* **Método**: `GET`
+* **Ruta**: `/api/roles` (Protegida)
+* **Respuesta exitosa (`200 OK`)**: Devuelve un listado completo con todos los roles y sus respectivos permisos vinculados.
+
+### Ver Detalle de Rol
+* **Método**: `GET`
+* **Ruta**: `/api/roles/{id}` (Protegida)
+* **Respuesta exitosa (`200 OK`)**: Devuelve la información detallada del rol consultado junto con sus permisos.
+
+### Registrar Nuevo Rol
+* **Método**: `POST`
+* **Ruta**: `/api/roles` (Protegida)
+* **Cuerpo de Petición (JSON)**:
+  ```json
+  {
+      "name_role": "supervisor",
+      "description": "Supervisor operativo del almacén",
+      "permissions": [3, 5, 6]
+  }
+  ```
+* **Respuesta exitosa (`201 Created`)**:
+  ```json
+  {
+      "message": "Rol creado exitosamente.",
+      "data": {
+          "id": 4,
+          "name_role": "supervisor",
+          "description": "Supervisor operativo del almacén",
+          "permissions": [
+              {
+                  "id": 3,
+                  "name_permission": "products.view",
+                  "description": "Ver catálogo de productos y stock"
+              }
+          ]
+      }
+  }
+  ```
+
+### Actualizar Rol
+* **Método**: `PUT`
+* **Ruta**: `/api/roles/{id}` (Protegida)
+* **Cuerpo de Petición (JSON)**:
+  ```json
+  {
+      "name_role": "supervisor_senior",
+      "description": "Nueva descripción",
+      "permissions": [3, 5, 6, 7]
+  }
+  ```
+* **Respuesta exitosa (`200 OK`)**: Devuelve el rol modificado y sincroniza sus permisos.
+
+### Eliminar Rol
+* **Método**: `DELETE`
+* **Ruta**: `/api/roles/{id}` (Protegida)
+* **Respuesta exitosa (`200 OK`)**:
+  ```json
+  {
+      "message": "Rol eliminado exitosamente."
+  }
+  ```
+  *(Nota: El sistema no permite eliminar los roles base `admin` y `user` para evitar inconsistencias).*
+
+### Listar Catálogo de Permisos
+* **Método**: `GET`
+* **Ruta**: `/api/permissions` (Protegida)
+* **Respuesta exitosa (`200 OK`)**: Devuelve el listado completo con todos los permisos del sistema.
+
+---
+
 ## 📦 2. Productos (`/api/products`) - [Protegido]
 
 ### Listar Productos

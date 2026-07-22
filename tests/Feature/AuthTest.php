@@ -18,6 +18,9 @@ class AuthTest extends TestCase
     {
         parent::setUp();
 
+        // Seed roles and permissions
+        $this->seed(\Database\Seeders\RolesSeeder::class);
+
         // Crear administrador de prueba
         $this->admin = User::create([
             'first_name' => 'Admin',
@@ -99,7 +102,7 @@ class AuthTest extends TestCase
             'last_name' => 'Gómez',
             'cedula' => '11223344',
             'username' => $expectedUsername,
-            'role' => 'user'
+            'role_id' => \App\Models\Role::where('name_role', 'user')->first()->id
         ]);
     }
 

@@ -25,7 +25,6 @@ class UserSeeder extends Seeder
             'role' => 'admin',
         ]);
 
-        // También podemos crear un usuario común de prueba
         User::create([
             'first_name' => 'Juan',
             'last_name' => 'Pérez',
@@ -36,6 +35,18 @@ class UserSeeder extends Seeder
             'username' => 'juan.perez',
             'password' => Hash::make('user123'),
             'role' => 'user',
+        ]);
+
+        User::create([
+            'first_name' => 'Ana',
+            'last_name' => 'Martínez',
+            'cedula' => '11223344',
+            'gender' => 'F',
+            'mobile_phone' => '04169998877',
+            'email' => 'ana@inventario.com',
+            'username' => 'ana.martinez',
+            'password' => Hash::make('auditor123'),
+            'role' => 'auditor',
         ]);
     }
 }

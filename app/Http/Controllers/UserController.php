@@ -12,9 +12,9 @@ class UserController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        if (!$request->user()->isAdmin()) {
+        if (!$request->user()->hasPermission('users.view')) {
             return response()->json([
-                'message' => 'No autorizado. Se requiere rol de administrador.'
+                'message' => 'No autorizado. Se requiere permiso para ver usuarios.'
             ], 403);
         }
 
@@ -26,7 +26,7 @@ class UserController extends Controller
     {
         // El usuario autenticado debe ser admin. Esto lo validaremos en el middleware o ruta, 
         // pero añadimos una capa de seguridad extra aquí.
-        if (!$request->user()->isAdmin()) {
+        if (!$request->user()->hasPermission('users.manage')) {
             return response()->json([
                 'message' => 'No tienes permisos para registrar usuarios.'
             ], 403);
@@ -86,9 +86,9 @@ class UserController extends Controller
 
     public function show(Request $request, User $user): JsonResponse
     {
-        if (!$request->user()->isAdmin()) {
+        if (!$request->user()->hasPermission('users.view')) {
             return response()->json([
-                'message' => 'No autorizado. Se requiere rol de administrador.'
+                'message' => 'No autorizado. Se requiere permiso para ver usuarios.'
             ], 403);
         }
 
@@ -97,9 +97,9 @@ class UserController extends Controller
 
     public function destroy(Request $request, User $user): JsonResponse
     {
-        if (!$request->user()->isAdmin()) {
+        if (!$request->user()->hasPermission('users.manage')) {
             return response()->json([
-                'message' => 'No autorizado. Se requiere rol de administrador.'
+                'message' => 'No autorizado. Se requiere permiso para gestionar usuarios.'
             ], 403);
         }
 

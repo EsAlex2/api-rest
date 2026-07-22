@@ -24,6 +24,9 @@ class InventoryMovementTest extends TestCase
     {
         parent::setUp();
 
+        // Seed roles and permissions
+        $this->seed(\Database\Seeders\RolesSeeder::class);
+
         $this->user = \App\Models\User::create([
             'first_name' => 'Test',
             'last_name' => 'User',
